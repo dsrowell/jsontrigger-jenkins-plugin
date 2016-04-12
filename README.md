@@ -22,7 +22,7 @@ To run the test cases:
 To build the plugin, ready for installation into Jenkins:  
 `./gradlew jpi`
 
-The plugin will be written to `build/libs/deploydb-jenkins.hpi`.
+The plugin will be written to `build/libs/jsontrigger-jenkins.hpi`.
 
 ## Release
 ### One-time preparation
@@ -37,7 +37,7 @@ password=...
 To publish a plugin update to the Jenkins update centre:
 * Update the top-level `version` property in `build.gradle`
 * Commit: `git commit -am "Preparing for release ${VERSION}."`
-* Tag: `git tag deploydb-jenkins-plugin-${VERSION}`
+* Tag: `git tag jsontrigger-jenkins-plugin-${VERSION}`
 * Push: `git push && git push --tags`
 * Release: `./gradlew clean publish`
 
