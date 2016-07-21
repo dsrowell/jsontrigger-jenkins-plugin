@@ -9,6 +9,9 @@ import hudson.security.ACL;
 import jenkins.model.Jenkins;
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.HttpResponses;
 import org.kohsuke.stapler.StaplerRequest;
@@ -17,7 +20,10 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -38,24 +44,28 @@ public class TriggerEndpoint implements UnprotectedRootAction {
     @RequirePOST
     public HttpResponse doTrigger(StaplerRequest req) throws IOException, ServletException {
         // Grab webhook payload from request body
+    	
+        // The Content-Type header should contain info about what type of webhook this is
+        String contentType = fixEmptyAndTrim(req.getHeader("Content-Type"));
+        if (contentType == null) {
+            LOGGER.warning("Received hook without Content-Type header.");
+            return HttpResponses.errorWithoutStack(415, "Could not determine hook type from Content-Type header.");
+        }
+
         TriggerWebhook hook;
         try {
             LOGGER.info(String.format("Incoming webhook from user agent %s.", req.getHeader("User-agent")));
-            hook = new ObjectMapper().readValue(req.getInputStream(), TriggerWebhook.class);
+            hook = decodeStream(req.getInputStream(), contentType);
             hook.setUserAgent(req.getHeader("User-agent"));
+        } catch (IllegalArgumentException e) {
+            LOGGER.warning("Received hook with unsupported content type. " + e.getMessage());
+            return HttpResponses.errorWithoutStack(400, "This endpoint expects a POST request with JSON body.");
         } catch (JsonParseException e) {
             LOGGER.warning("Received hook without JSON body. " + e.getMessage());
             return HttpResponses.errorWithoutStack(400, "This endpoint expects a POST request with JSON body.");
         } catch (IOException e) {
             LOGGER.warning("Failed to read webhook payload from request body: "+ e.getMessage());
             return HttpResponses.errorWithoutStack(400, "Failed to read webhook payload from request body.");
-        }
-
-        // The Content-Type header should contain info about what type of webhook this is
-        String contentType = fixEmptyAndTrim(req.getHeader("Content-Type"));
-        if (contentType == null) {
-            LOGGER.warning("Received hook without Content-Type header.");
-            return HttpResponses.errorWithoutStack(415, "Could not determine hook type from Content-Type header.");
         }
 
         // Search for enabled jobs that should be triggered for the given hook
@@ -116,5 +126,27 @@ public class TriggerEndpoint implements UnprotectedRootAction {
     @Override
     public String getDisplayName() {
         return null;
+    }
+    
+    public TriggerWebhook decodeStream(final InputStream in, final String contentType) throws JsonParseException, IOException, IllegalArgumentException {
+    	TriggerWebhook hook;
+    	final String encoding = "UTF-8";
+    	final Charset charset = Charset.forName(encoding);
+    	
+    	if ("application/json".equals(contentType)) {
+    		hook = new ObjectMapper().readValue(in, TriggerWebhook.class);
+    	} else if ("application/x-www-form-urlencoded".equals(contentType)) {
+    		hook = new TriggerWebhook();
+    		final String formdata = IOUtils.toString(in, charset);
+    		List<NameValuePair> data = URLEncodedUtils.parse(formdata, charset);
+    		Map<String, Object> values = new HashMap<String, Object>();
+    		for (final NameValuePair pair : data) {
+    			hook.setOtherValue(pair.getName(), pair.getValue());
+    		}
+    	} else {
+    		throw new IllegalArgumentException("Unsupported content type");
+    	}
+
+        return hook;
     }
 }
