@@ -11,7 +11,7 @@ public class TriggerWebhook {
 	private String userAgent;
     private Map<String, Object> map;
 
-    private TriggerWebhook() {
+    public TriggerWebhook() {
         this.map = new HashMap<String, Object>();
     }
     

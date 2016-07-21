@@ -42,7 +42,10 @@ public class TriggerEndpointTest {
 		TriggerWebhook hook = triggerEndpoint.decodeStream(this.getClass().getResourceAsStream("/payload.form"), "application/x-www-form-urlencoded");
 
 		final Map<String, Object> values = hook.getOtherValues();
-		assertTrue("Expected json to contain object", values.keySet().contains("object"));
+		for (final String key : values.keySet()) {
+			System.out.println(key + ": " + values.get(key));
+		}
+		assertTrue("Expected form to contain subject", values.keySet().contains("subject"));
 	}
 
 }

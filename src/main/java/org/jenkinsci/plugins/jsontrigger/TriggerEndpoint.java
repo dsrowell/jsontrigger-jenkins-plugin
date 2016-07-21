@@ -9,6 +9,8 @@ import hudson.security.ACL;
 import jenkins.model.Jenkins;
 import org.acegisecurity.context.SecurityContext;
 import org.acegisecurity.context.SecurityContextHolder;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.HttpResponses;
@@ -19,7 +21,9 @@ import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -126,13 +130,19 @@ public class TriggerEndpoint implements UnprotectedRootAction {
     
     public TriggerWebhook decodeStream(final InputStream in, final String contentType) throws JsonParseException, IOException, IllegalArgumentException {
     	TriggerWebhook hook;
+    	final String encoding = "UTF-8";
+    	final Charset charset = Charset.forName(encoding);
     	
     	if ("application/json".equals(contentType)) {
     		hook = new ObjectMapper().readValue(in, TriggerWebhook.class);
     	} else if ("application/x-www-form-urlencoded".equals(contentType)) {
-    		CharArrayBuffer buffer = new CharArrayBuffer();
-    		List<NameValuePair> data = URLEncodedUtils.parse(in);
-    		hook = null;
+    		hook = new TriggerWebhook();
+    		final String formdata = IOUtils.toString(in, charset);
+    		List<NameValuePair> data = URLEncodedUtils.parse(formdata, charset);
+    		Map<String, Object> values = new HashMap<String, Object>();
+    		for (final NameValuePair pair : data) {
+    			hook.setOtherValue(pair.getName(), pair.getValue());
+    		}
     	} else {
     		throw new IllegalArgumentException("Unsupported content type");
     	}
