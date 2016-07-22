@@ -1,21 +1,16 @@
 package org.jenkinsci.plugins.jsontrigger;
 
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
+
 import hudson.Extension;
 import hudson.model.AbstractProject;
 import hudson.model.Item;
 import hudson.triggers.Trigger;
 import hudson.triggers.TriggerDescriptor;
-import jenkins.model.Jenkins;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
-
-import java.util.List;
-import java.util.logging.Logger;
 
 /** Build trigger specifying criteria to match against incoming webhooks. */
 public class JsonTrigger extends Trigger<AbstractProject<?, ?>> {
-
-    private static final Logger LOGGER = Logger.getLogger(JsonTrigger.class.getName());
 
     private String userAgent;
     

@@ -3,10 +3,7 @@ package jsontrigger;
 import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Map;
 
 import org.jenkinsci.plugins.jsontrigger.TriggerEndpoint;

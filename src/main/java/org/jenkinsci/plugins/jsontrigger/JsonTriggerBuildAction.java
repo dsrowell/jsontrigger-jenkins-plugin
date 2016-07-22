@@ -1,19 +1,18 @@
 package org.jenkinsci.plugins.jsontrigger;
 
-import hudson.model.Action;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.CaseFormat;
-import hudson.EnvVars;
-import hudson.model.AbstractBuild;
-import hudson.model.EnvironmentContributingAction;
+import static com.google.common.base.CaseFormat.LOWER_CAMEL;
+import static hudson.Util.fixNull;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.google.common.base.CaseFormat.LOWER_CAMEL;
-import static hudson.Util.fixNull;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.CaseFormat;
+
+import hudson.EnvVars;
+import hudson.model.AbstractBuild;
+import hudson.model.EnvironmentContributingAction;
 
 /** Contains the data required for a Webhook-triggered build, and exports it to the build environment. */
 public class JsonTriggerBuildAction implements EnvironmentContributingAction {
@@ -23,7 +22,7 @@ public class JsonTriggerBuildAction implements EnvironmentContributingAction {
 
     private final TriggerWebhook hook;
 
-    public JsonTriggerBuildAction(TriggerWebhook hook) {
+    public JsonTriggerBuildAction(final TriggerWebhook hook) {
         this.hook = hook;
     }
 
@@ -33,10 +32,10 @@ public class JsonTriggerBuildAction implements EnvironmentContributingAction {
     }
 
     @Override
-    public void buildEnvVars(AbstractBuild<?, ?> build, EnvVars env) {
+    public void buildEnvVars(final AbstractBuild<?, ?> build, final EnvVars env) {
         // Recursively export all other key/value pairs in the hook payload
         exportHookValues(env, hook.getOtherValues());
-        Map<String, Object> payload = new HashMap<String, Object>();
+        final Map<String, Object> payload = new HashMap<String, Object>();
         try {
 			payload.put("Payload", (new ObjectMapper()).writeValueAsString(getHook().getOtherValues()));
 	        exportHookValues(env, payload);
@@ -45,7 +44,7 @@ public class JsonTriggerBuildAction implements EnvironmentContributingAction {
 		}
     }
 
-    private static void exportHookValues(EnvVars env, Map<String, Object> values) {
+    private static void exportHookValues(final EnvVars env, final Map<String, Object> values) {
         exportHookValues(env, null, values);
     }
 
@@ -56,7 +55,8 @@ public class JsonTriggerBuildAction implements EnvironmentContributingAction {
      * @param nestingPrefix Optional prefix to add to each key, if the values map contains a nested map.
      * @param values Key/value pairs to be added to the environment.
      */
-    private static void exportHookValues(EnvVars env, String nestingPrefix, Map<String, Object> values) {
+    @SuppressWarnings("unchecked")
+    private static void exportHookValues(final EnvVars env, String nestingPrefix, final Map<String, Object> values) {
         if (env == null || values == null) {
             return;
         }
@@ -72,10 +72,6 @@ public class JsonTriggerBuildAction implements EnvironmentContributingAction {
         }
     }
 
-    private static String getEnvKey(String key) {
-        return getEnvKey(key, null);
-    }
-
     /**
      * Turns a key and optional prefix into an environment variable name.
      * <p/>
@@ -86,7 +82,7 @@ public class JsonTriggerBuildAction implements EnvironmentContributingAction {
      * @return A value prefixed with {@link #ENV_VAR_PREFIX}, e.g. given the parameters {@code key=buildId} and
      *         {@code nestingPrefix=artifact}, {@code DDB_ARTIFACT_BUILD_ID} would be returned.
      */
-    private static String getEnvKey(String key, String nestingPrefix) {
+    private static String getEnvKey(final String key, String nestingPrefix) {
         nestingPrefix = fixNull(nestingPrefix).trim();
         return ENV_VAR_PREFIX + LOWER_CAMEL.to(CaseFormat.UPPER_UNDERSCORE, nestingPrefix + key);
     }

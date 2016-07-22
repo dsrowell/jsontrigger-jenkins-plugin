@@ -23,9 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Logger;
 
 import static hudson.Util.fixEmptyAndTrim;
@@ -35,6 +33,9 @@ import static hudson.Util.fixEmptyAndTrim;
 public class TriggerEndpoint implements UnprotectedRootAction {
 
     private static final Logger LOGGER = Logger.getLogger(TriggerEndpoint.class.getName());
+    
+    private static final String APPLICATION_JSON = "application/json";
+    private static final String APPLICATION_X_FORM_URLENCODED = "application/x-www-form-urlencoded";
 
     @Override
     public String getUrlName() {
@@ -42,11 +43,11 @@ public class TriggerEndpoint implements UnprotectedRootAction {
     }
 
     @RequirePOST
-    public HttpResponse doTrigger(StaplerRequest req) throws IOException, ServletException {
+    public HttpResponse doTrigger(final StaplerRequest req) throws IOException, ServletException {
         // Grab webhook payload from request body
     	
         // The Content-Type header should contain info about what type of webhook this is
-        String contentType = fixEmptyAndTrim(req.getHeader("Content-Type"));
+        final String contentType = fixEmptyAndTrim(req.getHeader("Content-Type"));
         if (contentType == null) {
             LOGGER.warning("Received hook without Content-Type header.");
             return HttpResponses.errorWithoutStack(415, "Could not determine hook type from Content-Type header.");
@@ -73,7 +74,7 @@ public class TriggerEndpoint implements UnprotectedRootAction {
         LOGGER.fine(String.format("Incoming webhook %s triggered %d job(s).", hook, jobs.size()));
 
         // Schedule a build for each of the jobs that matched
-        for (AbstractProject<?, ?> job : jobs) {
+        for (final AbstractProject<?, ?> job : jobs) {
             job.scheduleBuild2(0, new JsonTriggerCause(), new JsonTriggerBuildAction(hook));
         }
 
@@ -86,7 +87,7 @@ public class TriggerEndpoint implements UnprotectedRootAction {
 
     /** @return A list of jobs which should be triggered by the given webhook. */
     @Nonnull
-    private static List<AbstractProject<?, ?>> findJobsToTriggerForWebhook(TriggerWebhook hook) {
+    private static List<AbstractProject<?, ?>> findJobsToTriggerForWebhook(final TriggerWebhook hook) {
         List<AbstractProject<?, ?>> jobsToTrigger = new ArrayList<AbstractProject<?, ?>>();
 
         // Run this block with system privileges so we can find and launch jobs that may require privileged user access
@@ -128,23 +129,38 @@ public class TriggerEndpoint implements UnprotectedRootAction {
         return null;
     }
     
+    /**
+     * Based on contentType, decode the stream into a TriggerWebhook object.  IllegalArgumentException is thrown
+     * if the content type is not supported.  JsonParseException is thrown if content type is "application/json"
+     * and the data is poorly formed.
+     * @param in Data stream from webhook
+     * @param contentType Content type of stream
+     * @return TriggerWebhook with decoded data from stream
+     * @throws JsonParseException
+     * @throws IOException
+     * @throws IllegalArgumentException
+     */
     public TriggerWebhook decodeStream(final InputStream in, final String contentType) throws JsonParseException, IOException, IllegalArgumentException {
     	TriggerWebhook hook;
     	final String encoding = "UTF-8";
     	final Charset charset = Charset.forName(encoding);
     	
-    	if ("application/json".equals(contentType)) {
+    	if (APPLICATION_JSON.equals(contentType)) {
+    	    
     		hook = new ObjectMapper().readValue(in, TriggerWebhook.class);
-    	} else if ("application/x-www-form-urlencoded".equals(contentType)) {
+    		
+    	} else if (APPLICATION_X_FORM_URLENCODED.equals(contentType)) {
+    	    
     		hook = new TriggerWebhook();
-    		final String formdata = IOUtils.toString(in, charset);
-    		List<NameValuePair> data = URLEncodedUtils.parse(formdata, charset);
-    		Map<String, Object> values = new HashMap<String, Object>();
+    		
+    		final List<NameValuePair> data = URLEncodedUtils.parse(IOUtils.toString(in, charset), charset);
+
     		for (final NameValuePair pair : data) {
     			hook.setOtherValue(pair.getName(), pair.getValue());
     		}
+    		
     	} else {
-    		throw new IllegalArgumentException("Unsupported content type");
+    		throw new IllegalArgumentException(Messages.UnsupportedContentType(contentType));
     	}
 
         return hook;
