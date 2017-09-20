@@ -3,14 +3,11 @@ package jsontrigger;
 import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Map;
 
-import org.jenkinsci.plugins.jsontrigger.TriggerEndpoint;
-import org.jenkinsci.plugins.jsontrigger.TriggerWebhook;
+import org.jenkinsci.plugins.webhooktrigger.TriggerEndpoint;
+import org.jenkinsci.plugins.webhooktrigger.TriggerWebhook;
 import org.junit.Test;
 
 import com.fasterxml.jackson.core.JsonParseException;

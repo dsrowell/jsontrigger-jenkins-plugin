@@ -1,8 +1,8 @@
-# JSON Trigger Plugin for Jenkins
+# Webhook Trigger Plugin for Jenkins
 
-[![Build Status](https://travis-ci.org/dsrowell/jsontrigger-jenkins-plugin.svg?branch=master)](https://travis-ci.org/dsrowell/jsontrigger-jenkins-plugin)
+[![Build Status](https://travis-ci.org/dsrowell/webhooktrigger-jenkins-plugin.svg?branch=master)](https://travis-ci.org/dsrowell/webhooktrigger-jenkins-plugin)
 
-Triggers builds based on incoming webhooks with JSON data.
+Triggers builds based on incoming webhooks with JSON or form data.
 
 ## Webhook configuration
 Your application should be configured to send all webhook events to
@@ -37,12 +37,12 @@ password=...
 To publish a plugin update to the Jenkins update centre:
 * Update the top-level `version` property in `build.gradle`
 * Commit: `git commit -am "Preparing for release ${VERSION}."`
-* Tag: `git tag jsontrigger-jenkins-plugin-${VERSION}`
+* Tag: `git tag webhooktrigger-jenkins-plugin-${VERSION}`
 * Push: `git push && git push --tags`
 * Release: `./gradlew clean publish`
 
 Assuming the Gradle build went well, you can confirm here that the release was uploaded correctly:
-http://repo.jenkins-ci.org/releases/org/jenkins-ci/plugins/jsontrigger/
+http://repo.jenkins-ci.org/releases/org/jenkins-ci/plugins/webhooktrigger/
 
 The plugin update should appear in the Jenkins update centre within four to eight hours.
 

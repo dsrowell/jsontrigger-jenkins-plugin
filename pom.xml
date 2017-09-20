@@ -11,13 +11,13 @@
     <relativePath/>
   </parent>
   <groupId>org.jenkins-ci.plugins</groupId>
-  <artifactId>jsontrigger</artifactId>
+  <artifactId>webhooktrigger</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
-  <name>JSON Trigger Plugin</name>
-  <description>JSON Trigger Plugin</description>
-  <url>https://wiki.jenkins-ci.org/display/JENKINS/JSON+Trigger+Plugin</url>
+  <name>Webhook Trigger Plugin</name>
+  <description>Webhook Trigger Plugin</description>
+  <url>https://wiki.jenkins-ci.org/display/JENKINS/Webhook+Trigger+Plugin</url>
   <licenses>
     <license>
       <name>MIT License</name>
